@@ -219,7 +219,19 @@ function IncidentsPage() {
   })
 
   useEffect(() => {
-    setIncidents(getIncidents())
+    const user = getCurrentUser()
+
+    // Get all teams the user is a member of
+    const teams = getTeams()
+    const userTeams = teams.filter((t: any) => t.members && t.members.includes(user?.email))
+    const userTeamNames = userTeams.map((t: any) => t.name)
+
+    // Filter incidents by team assignment
+    const allIncidents = getIncidents()
+    const filteredIncidents = allIncidents.filter((i: any) =>
+      userTeamNames.includes(i.team) || i.team === 'General' || !i.team
+    )
+    setIncidents(filteredIncidents)
   }, [])
 
   const handleCreateIncident = (e: React.FormEvent) => {
@@ -258,7 +270,8 @@ function IncidentsPage() {
 
   const confirmEscalate = () => {
     if (incidentToEscalate) {
-      const updatedIncident = escalateIncident(incidentToEscalate)
+      const user = getCurrentUser()
+      const updatedIncident = escalateIncident(incidentToEscalate, user?.email || '')
       if (updatedIncident) {
         setIncidents(incidents.map(i => i.id === incidentToEscalate ? updatedIncident : i))
       }
@@ -479,7 +492,19 @@ function ReleasesPage() {
   })
 
   useEffect(() => {
-    setReleases(getReleases())
+    const user = getCurrentUser()
+
+    // Get all teams the user is a member of
+    const teams = getTeams()
+    const userTeams = teams.filter((t: any) => t.members && t.members.includes(user?.email))
+    const userTeamNames = userTeams.map((t: any) => t.name)
+
+    // Filter releases by team assignment
+    const allReleases = getReleases()
+    const filteredReleases = allReleases.filter((r: any) =>
+      userTeamNames.includes(r.team) || r.team === 'General' || !r.team
+    )
+    setReleases(filteredReleases)
   }, [])
 
   const handleCreateRelease = (e: React.FormEvent) => {
@@ -733,9 +758,11 @@ function TeamsPage() {
   const handleJoinTeam = (teamId: string) => {
     const user = getCurrentUser()
     if (user) {
-      const updatedTeam = joinTeam(teamId, user.email)
-      if (updatedTeam) {
-        setTeams(teams.map(t => t.id === teamId ? updatedTeam : t))
+      const result = joinTeam(teamId, user.email)
+      if (result.success && result.team) {
+        setTeams(teams.map(t => t.id === teamId ? result.team : t))
+      } else if (result.error) {
+        alert(result.error)
       }
     }
   }
