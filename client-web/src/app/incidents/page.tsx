@@ -30,13 +30,13 @@ export default function Incidents() {
 
     // Get all teams the user is a member of
     const teams = getTeams()
-    const userTeams = teams.filter((t: any) => t.members.includes(currentUser.email))
+    const userTeams = teams.filter((t: any) => t.members && t.members.includes(currentUser.email))
     const userTeamNames = userTeams.map((t: any) => t.name)
 
     // Filter incidents by team assignment
     const allIncidents = getIncidents()
     const filteredIncidents = allIncidents.filter((i: any) =>
-      userTeamNames.includes(i.team) || i.team === 'General'
+      userTeamNames.includes(i.team) || i.team === 'General' || !i.team
     )
     setIncidents(filteredIncidents)
   }, [router])

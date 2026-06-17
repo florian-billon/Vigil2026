@@ -29,13 +29,13 @@ export default function Releases() {
 
     // Get all teams the user is a member of
     const teams = getTeams()
-    const userTeams = teams.filter((t: any) => t.members.includes(currentUser.email))
+    const userTeams = teams.filter((t: any) => t.members && t.members.includes(currentUser.email))
     const userTeamNames = userTeams.map((t: any) => t.name)
 
     // Filter releases by team assignment
     const allReleases = getReleases()
     const filteredReleases = allReleases.filter((r: any) =>
-      userTeamNames.includes(r.team) || r.team === 'General'
+      userTeamNames.includes(r.team) || r.team === 'General' || !r.team
     )
     setReleases(filteredReleases)
   }, [router])
