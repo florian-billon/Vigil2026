@@ -36,6 +36,8 @@ interface Team {
   description: string
   memberCount: number
   invitationCode: string
+  leader: string
+  members: string[]
 }
 
 // Mock data storage
@@ -45,6 +47,7 @@ const STORAGE_KEYS = {
   INCIDENTS: 'vigil_incidents',
   RELEASES: 'vigil_releases',
   TEAMS: 'vigil_teams',
+  NOTIFICATIONS: 'vigil_notifications',
 }
 
 // Initialize mock data
@@ -60,6 +63,9 @@ export function initializeMockData() {
   }
   if (!localStorage.getItem(STORAGE_KEYS.TEAMS)) {
     localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify([]))
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)) {
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify([]))
   }
 }
 
@@ -174,7 +180,7 @@ export function createRelease(release: Omit<Release, 'id' | 'createdAt' | 'curre
   return newRelease
 }
 
-export function createTeam(team: Omit<Team, 'id' | 'invitationCode'>): Team {
+export function createTeam(team: Omit<Team, 'id' | 'invitationCode'>, leaderEmail: string): Team {
   initializeMockData()
   const teams = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEAMS) || '[]')
 
@@ -182,6 +188,8 @@ export function createTeam(team: Omit<Team, 'id' | 'invitationCode'>): Team {
     ...team,
     id: Date.now().toString(),
     invitationCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+    leader: leaderEmail,
+    members: [leaderEmail],
   }
 
   teams.push(newTeam)
@@ -243,7 +251,7 @@ export function acknowledgeIncident(incidentId: string): Incident | null {
   return incident
 }
 
-export function escalateIncident(incidentId: string): Incident | null {
+export function escalateIncident(incidentId: string, userEmail: string): Incident | null {
   initializeMockData()
   const incidents = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]')
   const incidentIndex = incidents.findIndex((i: Incident) => i.id === incidentId)
@@ -255,6 +263,19 @@ export function escalateIncident(incidentId: string): Incident | null {
 
   incidents[incidentIndex] = incident
   localStorage.setItem(STORAGE_KEYS.INCIDENTS, JSON.stringify(incidents))
+
+  // Notify team leader if the incident is assigned to a team
+  if (incident.team && incident.team !== 'General') {
+    const teams = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEAMS) || '[]')
+    const team = teams.find((t: Team) => t.name === incident.team)
+    if (team && team.leader && team.leader !== userEmail) {
+      addNotification(
+        team.leader,
+        `Incident "${incident.title}" has been escalated by ${userEmail}`,
+        'incident'
+      )
+    }
+  }
 
   return incident
 }
@@ -275,18 +296,62 @@ export function resolveIncident(incidentId: string): Incident | null {
   return incident
 }
 
-export function joinTeam(teamId: string, userId: string): Team | null {
+export function joinTeam(teamId: string, userId: string): { success: boolean; team?: Team; error?: string } {
   initializeMockData()
   const teams = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEAMS) || '[]')
   const teamIndex = teams.findIndex((t: Team) => t.id === teamId)
 
-  if (teamIndex === -1) return null
+  if (teamIndex === -1) return { success: false, error: 'Team not found' }
 
   const team = teams[teamIndex]
-  team.memberCount += 1
+
+  // Check if user is already a member
+  if (team.members.includes(userId)) {
+    return { success: false, error: 'You are already a member of this team' }
+  }
+
+  team.members.push(userId)
+  team.memberCount = team.members.length
 
   teams[teamIndex] = team
   localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams))
 
-  return team
+  return { success: true, team }
+}
+
+export function getIncidentsForTeam(teamName: string): Incident[] {
+  initializeMockData()
+  const incidents = JSON.parse(localStorage.getItem(STORAGE_KEYS.INCIDENTS) || '[]')
+  return incidents.filter((i: Incident) => i.team === teamName)
+}
+
+export function getReleasesForTeam(teamName: string): Release[] {
+  initializeMockData()
+  const releases = JSON.parse(localStorage.getItem(STORAGE_KEYS.RELEASES) || '[]')
+  return releases.filter((r: Release) => r.team === teamName)
+}
+
+export function getNotificationsForUser(userEmail: string): any[] {
+  initializeMockData()
+  const notifications = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS) || '[]')
+  return notifications.filter((n: any) => n.recipient === userEmail)
+}
+
+export function addNotification(recipient: string, message: string, type: 'incident' | 'release') {
+  initializeMockData()
+  const notifications = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS) || '[]')
+
+  const notification = {
+    id: Date.now().toString(),
+    recipient,
+    message,
+    type,
+    read: false,
+    createdAt: new Date().toISOString(),
+  }
+
+  notifications.push(notification)
+  localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications))
+
+  return notification
 }

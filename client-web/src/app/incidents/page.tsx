@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
-import { getIncidents, getCurrentUser, logout, createIncident, acknowledgeIncident, escalateIncident, resolveIncident, getIncidentsForTeam } from '@/services/mockApi'
+import { getIncidents, getCurrentUser, logout, createIncident, acknowledgeIncident, escalateIncident, resolveIncident, getIncidentsForTeam, getTeams } from '@/services/mockApi'
 import { useRouter } from 'next/navigation'
 
 export default function Incidents() {
@@ -27,7 +27,18 @@ export default function Incidents() {
       return
     }
     setUser(currentUser)
-    setIncidents(getIncidents())
+
+    // Get all teams the user is a member of
+    const teams = getTeams()
+    const userTeams = teams.filter((t: any) => t.members.includes(currentUser.email))
+    const userTeamNames = userTeams.map((t: any) => t.name)
+
+    // Filter incidents by team assignment
+    const allIncidents = getIncidents()
+    const filteredIncidents = allIncidents.filter((i: any) =>
+      userTeamNames.includes(i.team) || i.team === 'General'
+    )
+    setIncidents(filteredIncidents)
   }, [router])
 
   useEffect(() => {
@@ -90,7 +101,7 @@ export default function Incidents() {
 
   const confirmEscalate = () => {
     if (incidentToEscalate) {
-      const updatedIncident = escalateIncident(incidentToEscalate)
+      const updatedIncident = escalateIncident(incidentToEscalate, user?.email || '')
       if (updatedIncident) {
         setIncidents(incidents.map(i => i.id === incidentToEscalate ? updatedIncident : i))
       }

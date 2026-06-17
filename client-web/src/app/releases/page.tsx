@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
-import { getReleases, getCurrentUser, logout, createRelease, updateReleaseStep, cancelRelease } from '@/services/mockApi'
+import { getReleases, getCurrentUser, logout, createRelease, updateReleaseStep, cancelRelease, getTeams } from '@/services/mockApi'
 import { useRouter } from 'next/navigation'
 
 export default function Releases() {
@@ -26,7 +26,18 @@ export default function Releases() {
       return
     }
     setUser(currentUser)
-    setReleases(getReleases())
+
+    // Get all teams the user is a member of
+    const teams = getTeams()
+    const userTeams = teams.filter((t: any) => t.members.includes(currentUser.email))
+    const userTeamNames = userTeams.map((t: any) => t.name)
+
+    // Filter releases by team assignment
+    const allReleases = getReleases()
+    const filteredReleases = allReleases.filter((r: any) =>
+      userTeamNames.includes(r.team) || r.team === 'General'
+    )
+    setReleases(filteredReleases)
   }, [router])
 
   useEffect(() => {

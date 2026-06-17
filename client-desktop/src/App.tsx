@@ -709,11 +709,14 @@ function TeamsPage() {
 
   const handleCreateTeam = (e: React.FormEvent) => {
     e.preventDefault()
+    const user = getCurrentUser()
     const newTeam = createTeam({
       name: formData.name,
       description: formData.description,
       memberCount: formData.memberCount,
-    })
+      leader: '',
+      members: [],
+    }, user?.email || '')
     setTeams([...teams, newTeam])
     setShowModal(false)
     setFormData({
