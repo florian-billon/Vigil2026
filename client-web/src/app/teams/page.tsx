@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
-import { getTeams, getCurrentUser, logout, createTeam, joinTeam } from '@/services/mockApi'
+import { getTeams, getCurrentUser, logout, createTeam, joinTeam, getNotificationsForUser } from '@/services/mockApi'
 import { useRouter } from 'next/navigation'
 
 export default function Teams() {
@@ -37,7 +37,9 @@ export default function Teams() {
       name: formData.name,
       description: formData.description,
       memberCount: formData.memberCount,
-    })
+      leader: '',
+      members: [],
+    }, user?.email || '')
     setTeams([...teams, newTeam])
     setShowModal(false)
     setFormData({
@@ -53,9 +55,11 @@ export default function Teams() {
 
   const handleJoinTeam = (teamId: string) => {
     if (user) {
-      const updatedTeam = joinTeam(teamId, user.email)
-      if (updatedTeam) {
-        setTeams(teams.map(t => t.id === teamId ? updatedTeam : t))
+      const result = joinTeam(teamId, user.email)
+      if (result.success && result.team) {
+        setTeams(teams.map(t => t.id === teamId ? result.team : t))
+      } else if (result.error) {
+        alert(result.error)
       }
     }
   }

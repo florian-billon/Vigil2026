@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
-import { getIncidents, getCurrentUser, logout, createIncident, acknowledgeIncident, escalateIncident, resolveIncident } from '@/services/mockApi'
+import { getIncidents, getCurrentUser, logout, createIncident, acknowledgeIncident, escalateIncident, resolveIncident, getIncidentsForTeam } from '@/services/mockApi'
 import { useRouter } from 'next/navigation'
 
 export default function Incidents() {
