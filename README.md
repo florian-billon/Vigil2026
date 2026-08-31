@@ -458,4 +458,3 @@ Le pipeline CI/CD s'exécute sur:
 ---
 
 **Développé par Florian Billon**  
-**Projet académique T-DEV-600 / T-JSF-600**
