@@ -1,7 +1,7 @@
 # VIGIL - Operational Control Room
 
 **Auteur:** Florian Billon  
-**Version:** 0.1.0  
+**Version:** 0.5.0  
 **Projet T-DEV-600 / T-JSF-600**
 
 VIGIL est une salle de contrôle opérationnelle collaborative qui gère à la fois les déploiements planifiés (Releases) et les incidents imprévus en temps réel. Les équipes coordonnent leurs Releases et leurs Incidents, les deux étant connectés : une Release peut déclencher automatiquement un Incident, et un Incident actif peut bloquer une Release en cours.
