@@ -27,7 +27,7 @@ describe('Authentication', () => {
 
   describe('signup', () => {
     it('should create a new user successfully', async () => {
-      const result = await signup('test@example.com', 'password123', 'Test User')
+      const result = await signup('Test User', 'test@example.com', 'password123')
       expect(result.success).toBe(true)
       expect(result.user).toBeDefined()
       expect(result.user?.email).toBe('test@example.com')
@@ -35,8 +35,8 @@ describe('Authentication', () => {
     })
 
     it('should not create duplicate user', async () => {
-      await signup('test@example.com', 'password123', 'Test User')
-      const result = await signup('test@example.com', 'password123', 'Test User')
+      await signup('Test User', 'test@example.com', 'password123')
+      const result = await signup('Test User', 'test@example.com', 'password123')
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
     })
@@ -44,14 +44,14 @@ describe('Authentication', () => {
 
   describe('login', () => {
     it('should login with correct credentials', async () => {
-      await signup('test@example.com', 'password123', 'Test User')
+      await signup('Test User', 'test@example.com', 'password123')
       const result = await login('test@example.com', 'password123')
       expect(result.success).toBe(true)
       expect(result.user).toBeDefined()
     })
 
     it('should fail with wrong password', async () => {
-      await signup('test@example.com', 'password123', 'Test User')
+      await signup('Test User', 'test@example.com', 'password123')
       const result = await login('test@example.com', 'wrongpassword')
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
@@ -66,7 +66,7 @@ describe('Authentication', () => {
 
   describe('getCurrentUser', () => {
     it('should return current logged in user', async () => {
-      await signup('test@example.com', 'password123', 'Test User')
+      await signup('Test User', 'test@example.com', 'password123')
       await login('test@example.com', 'password123')
       const user = getCurrentUser()
       expect(user).toBeDefined()
@@ -81,7 +81,7 @@ describe('Authentication', () => {
 
   describe('logout', () => {
     it('should logout current user', async () => {
-      await signup('test@example.com', 'password123', 'Test User')
+      await signup('Test User', 'test@example.com', 'password123')
       await login('test@example.com', 'password123')
       logout()
       const user = getCurrentUser()
@@ -111,7 +111,7 @@ describe('Incidents', () => {
       expect(incident.status).toBe('open')
     })
 
-    it('should generate unique ID for each incident', () => {
+    it('should generate unique ID for each incident', async () => {
       const incident1 = createIncident({
         title: 'Incident 1',
         description: 'Description 1',
@@ -120,6 +120,7 @@ describe('Incidents', () => {
         assignedTo: 'User 1',
         team: 'General',
       })
+      await new Promise(resolve => setTimeout(resolve, 1))
       const incident2 = createIncident({
         title: 'Incident 2',
         description: 'Description 2',
@@ -265,13 +266,14 @@ describe('Releases', () => {
       expect(release.currentStep).toBe(1)
     })
 
-    it('should generate unique ID for each release', () => {
+    it('should generate unique ID for each release', async () => {
       const release1 = createRelease({
         version: '1.0.0',
         description: 'Release 1',
         team: 'General',
         totalSteps: 5,
       })
+      await new Promise(resolve => setTimeout(resolve, 1))
       const release2 = createRelease({
         version: '2.0.0',
         description: 'Release 2',
@@ -500,12 +502,13 @@ describe('Notifications', () => {
       expect(notification.read).toBe(false)
     })
 
-    it('should generate unique ID for each notification', () => {
+    it('should generate unique ID for each notification', async () => {
       const notification1 = addNotification(
         'user@example.com',
         'Message 1',
         'incident'
       )
+      await new Promise(resolve => setTimeout(resolve, 1))
       const notification2 = addNotification(
         'user@example.com',
         'Message 2',
